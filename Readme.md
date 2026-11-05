@@ -1,15 +1,75 @@
-从0开始实现 [ShyC](https://github.com/Shyliuli/ShyProject/blob/main/language.md)（[ShyProject](https://github.com/Shyliuli/ShyProject)）的编译器，旨在探索 LLM 辅助学习编译原理。使用 ShyC 实现。
+# exp0：环境配置
 
-分支结构:
+这一节不写编译器，只把工具链装好：能用 ShyCC 编译 C 程序，并分别在 ShyEmu 和本机上运行。
 
-- main（你在这里）
-- exp0
-- exp1
-- …
+## 1. 获取 ShyProject
 
-exp 分支内容:
+ShyProject 里有 ShyCC（编译器）、ShyEmu（模拟器）和 libshy（标准库）。
 
-- readme: 这一分支的教学内容和实验要求
-- `exp/`: 代码
-- `exam/`: 下设 `exam.py` 和一系列测试文件/文件夹，检查实验是否完成
-- `playground/`: 一些示例，可以在这里自由尝试
+```sh
+git clone https://github.com/Shyliuli/ShyProject.git
+cd ShyProject
+```
+
+## 2. 安装依赖
+
+- **Rust**：用来编译 ShyCC 和 ShyEmu。没装的话用 [rustup](https://rustup.rs)：
+
+  ```sh
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+  ```
+
+- **clang**：ShyCC 默认编译到 ShyISA，不需要 clang；编译到本机（`--target host`）时由 clang 生成代码并链接。
+
+  ```sh
+  sudo pacman -S clang      # Arch
+  sudo apt install clang    # Debian / Ubuntu
+  ```
+
+- **Python 3**：用来运行 `exam/exam.py`。
+
+## 3. 编译并安装 ShyCC 和 ShyEmu
+
+在 ShyProject 目录下：
+
+```sh
+make install-bin PREFIX=~/.local
+```
+
+这条命令会做两件事：
+
+- 编译 shycc、shyemu 等程序，并安装到 `~/.local/bin`；
+- 生成 `~/.shycc.toml`，记录 libshy 的位置，这样在任何目录下都能编译。
+
+确认 `~/.local/bin` 在 `PATH` 里：
+
+```sh
+shycc --version
+shyemu --version
+```
+
+如果提示找不到命令，把 `export PATH="$HOME/.local/bin:$PATH"` 加到 `~/.bashrc`（或你用的 shell 的配置文件）里，然后重开终端。
+
+## 4. 编译运行第一个程序
+
+回到本仓库（ShyccFromScratch）目录：
+
+```sh
+# 编译到 ShyISA，用 ShyEmu 运行
+shycc ./playground/hello.c -o hello.sfs
+shyemu ./hello.sfs
+
+# 编译到本机，直接运行
+shycc --target host ./playground/hello.c -o hello.elf
+./hello.elf
+```
+
+两次都应该输出 `hello world`。
+
+## exam
+
+```sh
+python3 exam/exam.py
+```
+
+它会检查 `shycc --version`、`shyemu --version`、`clang --version` 能否运行，再用上面两种方式编译运行 `exam/hello.c`，核对输出。全部通过，exp0 就完成了。
