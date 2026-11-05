@@ -38,13 +38,16 @@ make install-bin PREFIX=~/.local
 
 这条命令会做两件事：
 
-- 编译 shycc、shyemu 等程序，并安装到 `~/.local/bin`；
+- 编译工具链并安装到 `~/.local/bin`：`shycc`（编译驱动）、`shyc`（C/ShyC 编译器）、`shyasm`（汇编器）、`shyld`（链接器）、`shyemu`（模拟器）；
 - 生成 `~/.shycc.toml`，记录 libshy 的位置，这样在任何目录下都能编译。
 
 确认 `~/.local/bin` 在 `PATH` 里：
 
 ```sh
 shycc --version
+shyc --version
+shyasm --version
+shyld --version
 shyemu --version
 ```
 
@@ -72,4 +75,4 @@ shycc --target host ./playground/hello.c -o hello.elf
 python3 exam/exam.py
 ```
 
-它会检查 `shycc --version`、`shyemu --version`、`clang --version` 能否运行，再用上面两种方式编译运行 `exam/hello.c`，核对输出。全部通过，exp0 就完成了。
+它会检查 `shycc`、`shyc`、`shyasm`、`shyld`、`shyemu`、`clang` 的 `--version` 能否运行，再用上面两种方式编译运行 `exam/hello.c`，核对输出。全部通过，exp0 就完成了。

@@ -51,6 +51,9 @@ def check_output(name, steps, expected):
 
 TESTS = [
     check_runs(["shycc", "--version"]),
+    check_runs(["shyc", "--version"]),
+    check_runs(["shyasm", "--version"]),
+    check_runs(["shyld", "--version"]),
     check_runs(["shyemu", "--version"]),
     check_runs(["clang", "--version"]),
     check_output(
