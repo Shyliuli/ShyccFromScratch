@@ -1,4 +1,4 @@
-从0开始实现 ShyC（https://github.com/Shyliuli/ShyProject）的编译器，旨在探索 LLM 辅助学习编译原理。使用 ShyC 实现。
+从0开始实现 [ShyC](https://github.com/Shyliuli/ShyProject/blob/main/language.md)（[ShyProject](https://github.com/Shyliuli/ShyProject)）的编译器，旨在探索 LLM 辅助学习编译原理。使用 ShyC 实现。
 
 分支结构:
 
