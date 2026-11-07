@@ -1,0 +1,8 @@
+//exam/case/shyc_subset.c 
+
+fn main()->int{
+    int a=10;
+    int b=a*10+((20)-(30/3));
+    println!("{}",b);
+    return a;
+}

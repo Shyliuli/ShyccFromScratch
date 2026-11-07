@@ -1,0 +1,16 @@
+#ifndef LEXER_SHYH
+#define LEXER_SHYH
+
+#include <core/str.shyh>
+
+enum Token {
+    Keyword(Str),
+    Symbol(Str),
+    Number(int),
+    String(Str),
+    Operator(Str),
+    Punct(char),
+    Eof,
+};
+
+#endif

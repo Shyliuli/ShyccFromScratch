@@ -1,0 +1,107 @@
+use std::io::*;
+use std::fs::*;
+use std::env::Args;
+use std::fmt::*;
+use alloc::vec::*;
+#include "lexer.shyh"
+
+fn scanner_start(const char *source);
+fn scanner_next(void) -> Token;
+fn scanner_stop(void);
+
+// 我们应该处理 mycc [filename] (-o [filename2])
+fn main(Args args)->int{
+    let len=args.len();
+    //报错
+    if (len < 2 || len == 3 || (len == 4 && !args.has_flag("-o"))) {
+        eprintln("usage: mycc <input> [-o <output>]");
+        return 1;
+    }
+    let input_file=args.get(1).unwrap();
+    let mut output_file=Str::from_cstr("a.out");
+    if (len == 4){
+        output_file = args.value_of("-o").unwrap();
+    }
+    //读取
+    let res=read_to_string(input_file);
+    if (res.is_err()){
+    eprintln("error: cannot read file {}, no such file", input_file);
+    return 1;
+    }
+    //自动清理String内存
+    defer let source = res.unwrap();
+    let p=Scanner::new(source.as_str());
+    scanner_start(p.source.data);
+    let v=p.scan();
+    scanner_stop();
+    //这一节就到这里...
+    println!("{:?}",v);
+    return 0;
+}
+
+impl Debug for Token{
+    fn debug(const self *t, String *out) -> int {
+        int start = out.len();
+        switch (*t){
+        case Token::Keyword:
+            out.push_cstr("Keyword(");
+            out.push_str(t.payload.Keyword);
+            out.push_cstr(")");
+            break;
+        case Token::Symbol:
+            out.push_cstr("Symbol(");
+            out.push_str(t.payload.Symbol);
+            out.push_cstr(")");
+            break;
+        case Token::Number:
+            out.push_cstr("Number(");
+            fmt_debug(t.payload.Number, out);
+            out.push_cstr(")");
+            break;
+        case Token::String:
+            out.push_cstr("String(");
+            fmt_debug(t.payload.String, out);
+            out.push_cstr(")");
+            break;
+        case Token::Operator:
+            out.push_cstr("Operator(");
+            out.push_str(t.payload.Operator);
+            out.push_cstr(")");
+            break;
+        case Token::Punct:
+            out.push_cstr("Punct(");
+            fmt_debug(t.payload.Punct, out);
+            out.push_cstr(")");
+            break;
+        case Token::Eof:
+            out.push_cstr("Eof");
+            break;
+        }
+        return out.len() - start;
+    }
+}
+
+struct Scanner{
+    Str source;
+};
+impl Scanner{
+    fn new(Str source)->Scanner{
+        Scanner p;
+        p.source = source;
+        return p;
+    }
+    fn scan(self*)->Vec<Token>
+    {
+        Vec<Token> tokens = {0};
+        while (1) {
+            Token token = scanner_next();
+            tokens.push(token);
+            switch (token) {
+            case Token::Eof:
+                return tokens;
+            default:
+                break;
+            }
+        }
+    }
+}
