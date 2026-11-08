@@ -221,7 +221,8 @@ void scanner_stop(void)
 第一个exam仅仅会检查你是否成功编译程序了并输出正确的token序列。
 ### 2. makefile
 作为第一个练习，我们会检查你对基础工具的理解。请修改`Makefile`，增加目标"shy_build"，
-它应该产生shyISA的mycc.sfs.提示:使用 --target=shy 来生成目标。
+它应该产生shyISA的mycc.sfs.提示:使用 --target=shy-user 来生成目标。
+ShyISA 目标的对象文件扩展名是 `.sobj`，例如 `build/scanner.sobj`。
 我们还会检查make build的默认行为是否被破坏.
 ### 3. 词法报错与块注释
 尝试让编译器能够处理块注释(返回空)。
@@ -242,4 +243,4 @@ void scanner_stop(void)
   - 非法字符 `@` 的消息是 `illegal character '@'`。
   - 未闭合块注释的位置指向 `/*` 起点，消息是 `unclosed block comment`。
 - 有词法错误时不向 stdout 输出 Token 数组，进程退出码为 1。
-- `make shy_build` 生成 `build/mycc.sfs`；`shyemu build/mycc.sfs <case>` 的输出应与 `build/mycc <case>` 一致。
+- `make shy_build` 生成 `build/mycc.sfs`；`shyemu-user build/mycc.sfs <case>` 的输出应与 `build/mycc <case>` 一致。
