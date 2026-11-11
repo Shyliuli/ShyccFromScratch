@@ -4,10 +4,7 @@ use std::env::Args;
 use std::fmt::*;
 use alloc::vec::*;
 #include "lexer.shyh"
-
-fn scanner_start(const char *source);
-fn scanner_next(void) -> Token;
-fn scanner_stop(void);
+#include <stdlib.h>
 
 // 我们应该处理 mycc [filename] (-o [filename2])
 fn main(Args args)->int{
@@ -30,7 +27,7 @@ fn main(Args args)->int{
     }
     //自动清理String内存
     defer let source = res.unwrap();
-    let p=Scanner::new(source.as_str());
+    let p=Scanner::new(source.as_str(), input_file);
     scanner_start(p.source.data);
     let v=p.scan();
     scanner_stop();
@@ -80,27 +77,76 @@ impl Debug for Token{
         return out.len() - start;
     }
 }
-
+enum ScannerState{
+    CommentStart,
+    CommentEnd,
+    Other
+};
+ScannerState state = Other;
+pub fn comment_start(){
+    state=CommentStart;
+}
+pub fn comment_end(){
+    state=CommentEnd;
+}
 struct Scanner{
     Str source;
+    Str input_file;
 };
 impl Scanner{
-    fn new(Str source)->Scanner{
+    fn new(Str source, Str input_file)->Scanner{
         Scanner p;
         p.source = source;
+        p.input_file = input_file;
+        state=Other;
         return p;
     }
     fn scan(self*)->Vec<Token>
     {
+        let scanner = self;
         Vec<Token> tokens = {0};
         while (1) {
             Token token = scanner_next();
-            tokens.push(token);
-            switch (token) {
-            case Token::Eof:
-                return tokens;
-            default:
+            switch(state){
+            /*为了处理块注释，需要一个简单地状态机*/
+            case CommentStart:{
+                switch (token) {
+                    case Token::Eof:
+                        /*注释写了一半没有闭合*/
+                        int line = comment_start_line();
+                        int column = comment_start_column();
+                        eprintln("{}:{}:{}: error: unclosed block comment",
+                            scanner.input_file, line, column);
+                        exit(1);
+                    default:
+                        break;
+                }
+            }
+            case CommentEnd:{
+                /*退出了*/
+                state=Other;
+            }
+            case Other:{
+                tokens.push(token);
+                switch (token) {
+                    case Token::Eof:
+                        return tokens;
+                    default:
+                        break;
+                }
                 break;
+            }
+            default:
+                {
+                    eprintln(
+                        "{}:{}:{}: error: Unknown Scanner State:{}",
+                        scanner.input_file,
+                        scanner_line(),
+                        scanner_column(),
+                        (int)state
+                    );
+                    break;
+                }
             }
         }
     }

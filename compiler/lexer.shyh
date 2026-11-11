@@ -13,4 +13,14 @@ enum Token {
     Eof,
 };
 
+fn scanner_start(const char *source);
+fn scanner_next(void) -> Token;
+fn scanner_stop(void);
+
+fn comment_start();
+fn comment_end();
+fn comment_start_line(void) -> int;
+fn comment_start_column(void) -> int;
+fn scanner_line(void) -> int;
+fn scanner_column(void) -> int;
 #endif

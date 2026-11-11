@@ -21,10 +21,52 @@ Str token_text(const char *text)
     String copy = String::from_cstr(text);
     return copy.as_str();
 }
+
+int current_line = 1;
+int current_column = 1;
+/*对于块注释，我们希望定位块注释开始的地方，因此需要额外维护line和column*/
+int comment_line = 1;
+int comment_column = 1;
+
+#define YY_USER_ACTION                            \
+    do {                                          \
+        for (int i = 0; i < yyleng; i++) {         \
+            if (yytext[i] == '\n') {               \
+                current_line++;                    \
+                current_column = 1;                \
+            } else {                               \
+                current_column++;                  \
+            }                                      \
+        }                                          \
+    } while (0);
+
+int comment_start_line(void)
+{
+    return comment_line;
+}
+
+int comment_start_column(void)
+{
+    return comment_column;
+}
+int scanner_line(void)
+{
+    return current_line;
+}
+int scanner_column(void)
+{
+    return current_column;
+}
 %}
+
+%x COMMENT
 
 %%
 
+\/\*                                {comment_line=current_line; comment_column=current_column-2; BEGIN(COMMENT); comment_start();}
+<COMMENT>"*/"                       { BEGIN(INITIAL); comment_end();}
+<COMMENT><<EOF>>                    { return Token::Eof; }
+<COMMENT>(.|\n)                     { }
 "fn"|"int"|"return"                 { return Token::Keyword(token_text(yytext)); }
 [a-zA-Z_][a-zA-Z0-9_]*              { return Token::Symbol(token_text(yytext)); }
 [0-9]+                              { return Token::Number(atoi(yytext)); }
@@ -43,6 +85,8 @@ Str token_text(const char *text)
 
 void scanner_start(const char *source)
 {
+    current_line = 1;
+    current_column = 1;
     yy_scan_string(source);
 }
 
