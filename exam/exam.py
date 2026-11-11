@@ -31,8 +31,8 @@ README_OUTPUT = (
 
 BLOCK_COMMENT_OUTPUT = (
     "[Keyword(fn), Symbol(main), Punct('('), Punct(')'), Operator(->), "
-    "Keyword(int), Punct('{'), Keyword(return), Number(42), Punct(';'), "
-    "Punct('}'), Eof]\n"
+    "Keyword(int), Punct('{'), Keyword(int), Symbol(a), Operator(=), Number(1), "
+    "Punct(';'), Keyword(return), Number(42), Punct(';'), Punct('}'), Eof]\n"
 )
 
 COMPARE_OUTPUT = (
@@ -144,7 +144,7 @@ TESTS = [
     ),
     check_makefile(),
     check_output(
-        "block comment",
+        "block comments",
         [[str(MYCC), str(CASE_DIR / "block_comment.c")]],
         BLOCK_COMMENT_OUTPUT,
     ),
