@@ -218,6 +218,7 @@ void scanner_stop(void)
 
 ## exam
 为了检验你的理解，我们增加了以下exam，运行 `python3 exam/exam.py` 以检查。
+你也许需要搜索 regex 的额外语法，例如如何匹配换行符，来完成这些 exam。
 ### 1. run it
 第一个exam仅仅会检查你是否成功编译程序了并输出正确的token序列。
 ### 2. makefile
