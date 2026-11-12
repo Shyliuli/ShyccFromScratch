@@ -73,6 +73,11 @@ impl Debug for Token{
         case Token::Eof:
             out.push_cstr("Eof");
             break;
+        case Token::Unknown:
+            out.push_cstr("Unknown(");
+            fmt_debug(t.payload.Unknown, out);
+            out.push_cstr(")");
+            break;
         }
         return out.len() - start;
     }
@@ -131,6 +136,14 @@ impl Scanner{
                 switch (token) {
                     case Token::Eof:
                         return tokens;
+                    case Token::Unknown: {
+                        eprintln("{}:{}:{}: error: illegal character '{}'",
+                            scanner.input_file,
+                            scanner_line(),
+                            scanner_column()-1,
+                            token.payload.Unknown);
+                        exit(1);
+                    }
                     default:
                         break;
                 }

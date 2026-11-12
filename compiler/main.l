@@ -77,7 +77,7 @@ int scanner_column(void)
 "//"[^\n]*                          { }
 [ \t\r\n]+                          { }
 
-.                                   { }
+.                                   { return Token::Unknown(token_text(yytext)); }
 
 <<EOF>>                             { return Token::Eof; }
 

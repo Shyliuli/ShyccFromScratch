@@ -11,6 +11,7 @@ enum Token {
     Operator(Str),
     Punct(char),
     Eof,
+    Unknown(Str),
 };
 
 fn scanner_start(const char *source);
