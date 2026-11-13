@@ -16,6 +16,7 @@ enum Token {
 
 fn scanner_start(const char *source);
 fn scanner_next(void) -> Token;
+/* 释放扫描器及 Token 字符串；调用后不能再读取这些 Token 的 Str。 */
 fn scanner_stop(void);
 
 fn comment_start();

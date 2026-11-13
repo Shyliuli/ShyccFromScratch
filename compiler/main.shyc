@@ -29,57 +29,34 @@ fn main(Args args)->int{
     defer let source = res.unwrap();
     let p=Scanner::new(source.as_str(), input_file);
     scanner_start(p.source.data);
-    let v=p.scan();
-    scanner_stop();
+    let mut v=p.scan();
     //这一节就到这里...
     println!("{:?}",v);
+    v.drop();
+    scanner_stop();
     return 0;
 }
 
 impl Debug for Token{
-    fn debug(const self *t, String *out) -> int {
-        int start = out.len();
+    fn debug(const self *t, WriterRef *out) -> int {
         switch (*t){
         case Token::Keyword:
-            out.push_cstr("Keyword(");
-            out.push_str(t.payload.Keyword);
-            out.push_cstr(")");
-            break;
+            return write!(out, "Keyword({})", t.payload.Keyword);
         case Token::Symbol:
-            out.push_cstr("Symbol(");
-            out.push_str(t.payload.Symbol);
-            out.push_cstr(")");
-            break;
+            return write!(out, "Symbol({})", t.payload.Symbol);
         case Token::Number:
-            out.push_cstr("Number(");
-            fmt_debug(t.payload.Number, out);
-            out.push_cstr(")");
-            break;
+            return write!(out, "Number({:?})", t.payload.Number);
         case Token::String:
-            out.push_cstr("String(");
-            fmt_debug(t.payload.String, out);
-            out.push_cstr(")");
-            break;
+            return write!(out, "String({:?})", t.payload.String);
         case Token::Operator:
-            out.push_cstr("Operator(");
-            out.push_str(t.payload.Operator);
-            out.push_cstr(")");
-            break;
+            return write!(out, "Operator({})", t.payload.Operator);
         case Token::Punct:
-            out.push_cstr("Punct(");
-            fmt_debug(t.payload.Punct, out);
-            out.push_cstr(")");
-            break;
+            return write!(out, "Punct({:?})", t.payload.Punct);
         case Token::Eof:
-            out.push_cstr("Eof");
-            break;
+            return write!(out, "Eof");
         case Token::Unknown:
-            out.push_cstr("Unknown(");
-            fmt_debug(t.payload.Unknown, out);
-            out.push_cstr(")");
-            break;
+            return write!(out, "Unknown({:?})", t.payload.Unknown);
         }
-        return out.len() - start;
     }
 }
 enum ScannerState{

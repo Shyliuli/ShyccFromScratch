@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <alloc/string.shyh>
+#include <alloc/vec.shyh>
 #include <lexer.shyh>
 //一些shycc libshy暂时不稳定的妥协
 //shycc暂时不支持的函数，但是我们也用不到
@@ -16,9 +17,12 @@
 //让yylex返回Token类型
 #define YY_DECL Token yylex(void)
 
-Str token_text(const char *text)
+Vec<String> token_strings = {0};
+
+Str copy_token_text(const char *text)
 {
     String copy = String::from_cstr(text);
+    token_strings.push(copy);
     return copy.as_str();
 }
 
@@ -67,17 +71,17 @@ int scanner_column(void)
 <COMMENT>"*/"                       { BEGIN(INITIAL); comment_end();}
 <COMMENT><<EOF>>                    { return Token::Eof; }
 <COMMENT>(.|\n)                     { }
-"fn"|"int"|"return"                 { return Token::Keyword(token_text(yytext)); }
-[a-zA-Z_][a-zA-Z0-9_]*              { return Token::Symbol(token_text(yytext)); }
+"fn"|"int"|"return"                 { return Token::Keyword(copy_token_text(yytext)); }
+[a-zA-Z_][a-zA-Z0-9_]*              { return Token::Symbol(copy_token_text(yytext)); }
 [0-9]+                              { return Token::Number(atoi(yytext)); }
-\"(\\.|[^\\"\n])*\"                 { return Token::String(token_text(yytext)); }
-"->"|[-+*/=]                        { return Token::Operator(token_text(yytext)); }
+\"(\\.|[^\\"\n])*\"                 { return Token::String(copy_token_text(yytext)); }
+"->"|[-+*/=><]|[><=]=|"++"|"--"     { return Token::Operator(copy_token_text(yytext)); }
 [(){},;!]                           { return Token::Punct(yytext[0]); }
 
 "//"[^\n]*                          { }
 [ \t\r\n]+                          { }
 
-.                                   { return Token::Unknown(token_text(yytext)); }
+.                                   { return Token::Unknown(copy_token_text(yytext)); }
 
 <<EOF>>                             { return Token::Eof; }
 
@@ -98,4 +102,8 @@ Token scanner_next(void)
 void scanner_stop(void)
 {
     yylex_destroy();
+    for (int i = 0; i < token_strings.len; i++) {
+        token_strings.data[i].drop();
+    }
+    token_strings.drop();
 }

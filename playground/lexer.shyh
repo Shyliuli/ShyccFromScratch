@@ -1,0 +1,15 @@
+#ifndef PLAYGROUND_LEXER_SHYH
+#define PLAYGROUND_LEXER_SHYH
+
+enum Token {
+    Number(int),
+    Operator(char),
+    Punct(char),
+    Unknown(char),
+    Eof,
+};
+
+fn scanner_next(void) -> Token;
+fn scanner_stop(void);
+
+#endif
