@@ -1,0 +1,6 @@
+fn main()->int {
+    let a = 1;
+    let mut b = a + 2;
+    b = b + 1;
+    return b;
+}

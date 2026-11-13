@@ -1,0 +1,4 @@
+fn add(int a, int b)->int;
+fn empty() { return; }
+int add(int a, int b) { return a + b; }
+int main(void) { empty(); return add(20, 22); }

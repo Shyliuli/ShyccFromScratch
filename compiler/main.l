@@ -71,7 +71,7 @@ int scanner_column(void)
 <COMMENT>"*/"                       { BEGIN(INITIAL); comment_end();}
 <COMMENT><<EOF>>                    { return Token::Eof; }
 <COMMENT>(.|\n)                     { }
-"fn"|"int"|"return"                 { return Token::Keyword(copy_token_text(yytext)); }
+"fn"|"int"|"void"|"return"|"let"|"mut"|"if"|"else"|"while"|"break"|"continue" { return Token::Keyword(copy_token_text(yytext)); }
 [a-zA-Z_][a-zA-Z0-9_]*              { return Token::Symbol(copy_token_text(yytext)); }
 [0-9]+                              { return Token::Number(atoi(yytext)); }
 \"(\\.|[^\\"\n])*\"                 { return Token::String(copy_token_text(yytext)); }

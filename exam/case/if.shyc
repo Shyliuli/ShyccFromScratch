@@ -1,0 +1,5 @@
+fn main()->int {
+    if (1) if (0) return 1; else return 2;
+    if (!0) { return 3; }
+    return 0;
+}

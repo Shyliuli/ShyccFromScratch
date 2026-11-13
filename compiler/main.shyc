@@ -30,11 +30,11 @@ fn main(Args args)->int{
     let p=Scanner::new(source.as_str(), input_file);
     scanner_start(p.source.data);
     let mut v=p.scan();
-    //这一节就到这里...
-    println!("{:?}",v);
+    // 将 exp1 的 Token 数组交给语法分析器。
+    let status = parse_program(&v, input_file);
     v.drop();
     scanner_stop();
-    return 0;
+    return status;
 }
 
 impl Debug for Token{

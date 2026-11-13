@@ -1,0 +1,3 @@
+fn empty()->void {}
+void stop(void) { return; }
+fn main()->int { return 0; }

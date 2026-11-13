@@ -2,6 +2,7 @@
 #define LEXER_SHYH
 
 #include <core/str.shyh>
+#include <alloc/vec.shyh>
 
 enum Token {
     Keyword(Str),
@@ -25,4 +26,5 @@ fn comment_start_line(void) -> int;
 fn comment_start_column(void) -> int;
 fn scanner_line(void) -> int;
 fn scanner_column(void) -> int;
+fn parse_program(Vec<Token> *tokens, Str input_file) -> int;
 #endif

@@ -1,0 +1,4 @@
+fn main()->int {
+    trace!("value\n", 1);
+    return 0;
+}

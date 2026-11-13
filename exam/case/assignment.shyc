@@ -1,0 +1,5 @@
+fn main()->int {
+    int a = 0, b;
+    a = b = 3;
+    return (a = 1, b = 2, a + b);
+}

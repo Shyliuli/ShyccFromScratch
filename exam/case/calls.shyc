@@ -1,0 +1,4 @@
+fn main()->int {
+    ping();
+    return add(1, twice(2 + 3));
+}

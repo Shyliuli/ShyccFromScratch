@@ -1,0 +1,5 @@
+fn main()->int {
+    int i = 3;
+    while (i) { i = i - 1; if (i) continue; break; }
+    return i;
+}

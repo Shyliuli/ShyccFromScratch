@@ -1,0 +1,14 @@
+fn sum(int n)->int {
+    let mut result = 0;
+    while (n > 0) {
+        result = result + n;
+        n--;
+    }
+    return result;
+}
+int main(void) {
+    int value = sum(5);
+    if (value == 15) println!("{}", value);
+    else return 1;
+    return 0;
+}

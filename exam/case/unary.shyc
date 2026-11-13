@@ -1,0 +1,4 @@
+fn main()->int {
+    int a = 3;
+    return -a * +2 + !0;
+}

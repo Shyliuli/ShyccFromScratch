@@ -23,7 +23,6 @@ factor:
     NUMBER
   | '(' expr ')' { $$ = $2; }
 ;
-
 ```
 
 # exp2 语法分析
@@ -335,11 +334,16 @@ factor:
   | '(' expr ')'
 ;
 ```
+
 类似flex，我们也可以在bison里指定某个规约发生时执行什么操作，其中我们可以使用
-- $$ 表示规约父节点的值
+
+- $$
+  表示规约父节点的值
+  $$
 - $i 表示第i叶子节点的值(符号也是一个叶子节点)
-对于expr:term 这种单叶子的情形，bison会默认执行$$=$1。
-由此我们可以写出:
+  对于expr:term 这种单叶子的情形，bison会默认执行$$=$1。
+  由此我们可以写出:
+
 ```bison
 input: expr { result = $1; };
 
@@ -368,7 +372,9 @@ factor:
 ```
 
 ### Flex
+
 我们给出了这样的Token类型
+
 ```c
 enum Token {
     Number(int),
@@ -378,7 +384,9 @@ enum Token {
     Eof,
 };
 ```
+
 并使用和exp1类似的flex进行词法分析，见playground/arithmetic.l。
+
 ### Bison如何解析token
 
 Bison 通过`yylex()->int` 这一接口获取Token.对于需要包含语义值的Token(例如数字)，通过yylval变量传值。
@@ -397,13 +405,13 @@ Bison 通过`yylex()->int` 这一接口获取Token.对于需要包含语义值�
 以 `(1+2)` 为例，传递过程如下：
 
 | 输入     | `scanner_next()` 返回  | `yylex()` 返回 | 语义值 |
-| -------- | ------------------------ | ---------------- | ---------------- |
-| `(`    | `Token::Punct('(')`    | `'('`          | 不使用           |
-| `1`    | `Token::Number(1)`     | `NUMBER`       | `1`            |
-| `+`    | `Token::Operator('+')` | `'+'`          | 不使用           |
-| `2`    | `Token::Number(2)`     | `NUMBER`       | `2`            |
-| `)`    | `Token::Punct(')')`    | `')'`          | 不使用           |
-| 输入结束 | `Token::Eof`           | `YYEOF`        | 不使用           |
+| -------- | ------------------------ | ---------------- | ------ |
+| `(`    | `Token::Punct('(')`    | `'('`          | 不使用 |
+| `1`    | `Token::Number(1)`     | `NUMBER`       | `1`  |
+| `+`    | `Token::Operator('+')` | `'+'`          | 不使用 |
+| `2`    | `Token::Number(2)`     | `NUMBER`       | `2`  |
+| `)`    | `Token::Punct(')')`    | `')'`          | 不使用 |
+| 输入结束 | `Token::Eof`           | `YYEOF`        | 不使用 |
 
 ### yyparse 如何使用这些符号
 
@@ -439,6 +447,7 @@ printf '%s\n' '(1 + 2) * 3 + 4' | build/ast/main
 ```text
 (+ (* (+ 1 2) 3) 4)
 ```
+
 即下树的表示:
 
 ```text
@@ -452,7 +461,9 @@ printf '%s\n' '(1 + 2) * 3 + 4' | build/ast/main
 ```
 
 ### AST 构建
+
 我们来看`playgroud/ast.y`.首先是这段ShyC代码，它定义了一个二叉树
+
 ```c
 struct Binary {
     char op;
@@ -489,76 +500,126 @@ impl Display for Node {
     }
 }
 ```
+
 与常规二叉树不太一样的是，它使用数组模拟二叉树，数组索引模拟指针。
-`Display` 决定节点的显示形式，入口用 `println!("{}", nodes.data[root])` 打印整棵树。`write!` 将左右子树继续写入同一个输出目标，递归过程中不需要为每棵子树创建字符串。
+Display用于输出这一二叉树，在内部的write!会递归调用它的display.
 
 ## exam
 
-playground 是带着完成的例子。下面的练习需要你把同样的方法用到 ShyC 中，检查程序放在 `exam/`，编译器实现在 `compiler/`。
+本章先做一个能继续接语义分析和代码生成的小型语言：C 的整数、局部变量、函数和基本控制流，加上 ShyC 的 `fn`、`let` 和 `println!`。
 
-所有正常输入都使用完整的 ShyC 程序。先实现 `fn main()->int { return 42; }` 这个最小外壳，再向里增加表达式和语句，避免为了检查中间步骤给编译器增加额外模式。
+范围限定如下：
 
-### 1. run it：最小函数
+| 部分         | 本章支持                                                                              |
+| ------------ | ------------------------------------------------------------------------------------- |
+| 类型与字面量 | `int`；函数返回值另支持 `void`；十进制整数、字符串                                |
+| 表达式       | 标识符、括号、四则运算、比较、一元 `+ - !`、`=`、逗号、前后缀 `++ --`、函数调用 |
+| 局部变量     | `int a;`、`int a = 1, b = 2;`、`let a = 1;`、`let mut a = 1;`                 |
+| 语句         | 空语句、表达式语句、块、`return`、`if/else`、`while`、`break/continue`        |
+| 函数         | `fn f(int x)->int`、C 写法 `int f(int x)`；声明和定义；零个或多个 `int` 参数    |
+| 额外调用     | `名称!(表达式参数列表)`，包括 `println!`；参数允许字符串                          |
 
-识别无参数函数、`int` 返回类型、花括号和 return 语句。先让 `return 42;` 产生一棵树。
 
-输出约定为：
+### 已完成示例：最小函数
 
-```text
-(program (fn main (block (return 42))))
+`compiler/parser.y` 给出最小 Bison 文法：
+
+```bison
+program:
+    FN SYMBOL '(' ')' ARROW INT '{' RETURN NUMBER ';' '}' {
+        root.name = $2;
+        root.value = $9;
+    }
+;
 ```
 
-函数体的 `block` 保存语句序列；程序的 `program` 保存函数序列。本节所有函数都返回 `int`，输出中省略这个固定类型。
-
-### 2. 表达式
-
-将 playground 的四则表达式接入 return，保留优先级、左结合和括号。表达式必须保留完整结构，不能在分析时提前算出结果。例如 `return 1 + 2 * 3;` 中的 return 节点应为 `(return (+ 1 (* 2 3)))`。
-
-### 3. 变量声明与引用
-
-支持 `int a = 表达式;`，并让表达式可以引用标识符。声明输出为 `(let a 表达式)`，引用直接输出变量名。一个函数体里可以有多条语句，输出时保持源代码顺序。
-
-这一节不检查变量是否已经定义，也不建立符号表。我们只识别语法并保留结构。
-
-### 4. println 调用
-
-支持 `println!(字符串, 可选的表达式参数列表);`。这里的意思是字符串后可以没有参数，也可以用逗号跟上一个或多个表达式。
-
-例如 `println!("hello");` 输出为 `(println "hello")`，`println!("{}", b);` 输出为 `(println "{}" b)`。字符串保留源代码中的引号和转义写法，不在本节解释转义或检查占位符数量。
-
-### 5. 完整程序与多个函数
-
-串起上面的规则，分析本节的完整示例。然后让程序支持一个或多个函数，并让函数体可以为空。空函数体输出为 `(block)`。
-
-完整示例的输出应为一行：
-
-```text
-(program (fn main (block (let a 10) (let b (+ (* a 10) (- 20 (/ 30 3)))) (println "{}" b) (return a))))
-```
-
-### 6. 语法错误
-
-处理缺分号、缺右括号、缺操作数等情况。遇到第一个错误就停止，不要求错误恢复。
-
-语法错误写入 stderr，格式沿用 exp1：`<file>:<line>:<column>: error: syntax error`。位置指向引发错误的 Token 起点；如果缺少的内容直到输入结束才被发现，则指向 EOF 位置。行列从 1 开始，换行后列号恢复为 1，本节制表符按一个字符计数。可以了解 Bison 的 `%locations`，并在词法分析器中记录 Token 的起止位置。
-
-有错误时退出码为 1，stdout 不输出 AST；成功时退出码为 0，stdout 只输出一行 AST。保留 exp1 的非法字符和未闭合块注释诊断。
-
-### 检查方式
-
-先构建自己的编译器，再运行检查：
+它识别一个无参、返回整数的函数，函数名和整数由输入决定。`Function` 保存这两个叶子，`Display` 输出固定结构的树。对于后续exam，你应自己构造真正的AST类型。
 
 ```sh
 make build
-python3 exam/exam.py
+build/mycc exam/case/minimal.shyc
 ```
 
-也可以只检查某一层，例如：
+输出：
+
+```text
+(program (fn main (params) int (block (return 42))))
+```
+
+### 1. 表达式：expr
+
+把 playground 的四则表达式接入 `return`，保留优先级、左结合和括号的作用。数字直接输出，运算输出为前缀树：`1 + 2 * 3` 对应 `(+ 1 (* 2 3))`。
+
+### 2. 局部变量和运算：variable
+
+让块保存多条语句，支持变量声明、引用、赋值、比较和自增自减。输出约定：
+
+| 输入               | AST                                         |
+| ------------------ | ------------------------------------------- |
+| `int a = 1, b;`  | `(decl int (var a 1) (var b))`            |
+| `let a = 1;`     | `(let a 1)`                               |
+| `let mut a = 1;` | `(let-mut a 1)`                           |
+| `a = b = 3;`     | `(expr (= a (= b 3)))`                    |
+| `return (a, b);` | `(return (, a b))`                        |
+| `++a; a--;`      | `(expr (pre++ a))`、`(expr (post-- a))` |
+
+引用直接输出变量名。一元运算只带一个孩子，例如 `(- a)`；二元运算带两个孩子，例如 `(- a b)`。
+
+从低到高的优先级：逗号、赋值、`==`、`< > <= >=`、`+ -`、`* /`、前缀运算、后缀运算与调用。赋值和连续前缀运算向右结合，其余二元运算向左结合。
+
+### 3. 调用：call
+
+支持零个或多个参数，以及嵌套调用。`f(1, g(2))` 输出为 `(call f 1 (call g 2))`。调用作为表达式，可以放在 `return`、初始化和其他表达式中；单独成为语句时包装为 `(expr ...)`。
+
+`println!("{}", a)` 输出为 `(macro println "{}" a)`，其他名称的 `name!(...)` 使用相同规则，不把 `println` 当关键字。
+
+### 4. 控制流：control
+
+词法器已补充 `if`、`else`、`while`、`break`、`continue`，连同 `void`、`let`、`mut` 都作为 `Keyword` 返回。请在 Bison 的 `parser_lex()` 中增加对应终结符映射。
+
+| 输入                                | AST                                     |
+| ----------------------------------- | --------------------------------------- |
+| `;`、`{}`                       | `(empty)`、`(block)`                |
+| `if (a) return 1;`                | `(if a (return 1))`                   |
+| `if (a) return 1; else return 2;` | `(if a (return 1) (return 2))`        |
+| `while (a) { a--; }`              | `(while a (block (expr (post-- a))))` |
+| `break;`、`continue;`           | `(break)`、`(continue)`             |
+
+### 5. 函数：function
+
+C写法与 `fn` 写法归一为相同 AST：
+
+```text
+(fn add (params (param int a) (param int b)) int (block (return (+ a b))))
+(prototype add (params (param int a) (param int b)) int)
+```
+
+### 6. 串起来：program
+
+综合以上内容，分析 `exam/case/program.shyc`
+
+### 7. 错误：error
+
+处理缺分号、缺右括号、缺操作数、空条件、多余 Token 等语法错误，遇到第一个错误就停止。位置指向引发错误的 Token 起点；若直到输入结束才发现缺少内容，则指向 EOF。行列从 1 开始，制表符按一个字符计数。
+
+语法诊断沿用 `<file>:<line>:<column>: error: syntax error`。词法器遇到非法字符或未闭合块注释时，保留 exp1 的消息和位置。
+
+成功时退出码为 0，stdout 只输出一行 AST，stderr 为空；失败时退出码为 1，stdout 为空，stderr 输出一条诊断。每
+
+### 检查方式
+
+检查程序先在仓库根目录执行 `make build/mycc`，构建成功后再运行用例。
 
 ```sh
+python3 exam/exam.py minimal
 python3 exam/exam.py expr
 ```
 
-可选的层名为 `minimal`、`expr`、`variable`、`println`、`program`、`error`。检查程序只运行现有可执行文件，不自动构建。当前提供的编译器仍然是 exp1 的词法分析实现，需要完成上述练习后才能通过。
+exam依次为 `minimal → expr → variable → call → control → function → program → error`。省略exam时检查全部。当前代码已经提供 `minimal` 示例，其余由你完成。
 
-`make build` 和 `make shy_build` 继续保留；ShyISA 版本使用 `shyemu-user build/mycc.sfs <input>` 运行时，也应该输出相同的 AST。
+检查程序默认跑host版本，你可以使用下面的方式检查shyISA build.
+
+```sh
+make shy_build
+shyemu-user build/mycc.sfs exam/case/minimal.shyc
+```
