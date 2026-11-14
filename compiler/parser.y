@@ -49,23 +49,23 @@ fn parser_lex(void) -> int {
     let token = input_tokens->data[next_token++];
     switch (token) {
     case Token::Keyword: {
-        let word = token.payload.Keyword;
+        let word = token.Keyword;
         if (word.eq(Str::from_cstr("fn"))) return FN;
         if (word.eq(Str::from_cstr("int"))) return INT;
         if (word.eq(Str::from_cstr("return"))) return RETURN;
         return PARSER_UNDEF;
     }
     case Token::Symbol:
-        parser_lval.text = token.payload.Symbol;
+        parser_lval.text = token.Symbol;
         return SYMBOL;
     case Token::Number:
-        parser_lval.number = token.payload.Number;
+        parser_lval.number = token.Number;
         return NUMBER;
     case Token::Operator:
-        if (token.payload.Operator.eq(Str::from_cstr("->"))) return ARROW;
+        if (token.Operator.eq(Str::from_cstr("->"))) return ARROW;
         return PARSER_UNDEF;
     case Token::Punct:
-        return token.payload.Punct;
+        return token.Punct;
     case Token::Eof:
         return PARSER_EOF;
     default:

@@ -34,11 +34,11 @@ impl Display for Node {
     fn display(const self *node, WriterRef *out) -> int {
         switch (*node) {
         case Node::Number:
-            return write!(out, "{}", node.payload.Number);
+            return write!(out, "{}", node.Number);
         case Node::Binary:
-            return write!(out, "({} {} {})", node.payload.Binary.op,
-                nodes.data[node.payload.Binary.left],
-                nodes.data[node.payload.Binary.right]);
+            return write!(out, "({} {} {})", node.Binary.op,
+                nodes.data[node.Binary.left],
+                nodes.data[node.Binary.right]);
         }
     }
 }
@@ -79,12 +79,12 @@ fn yylex(void) -> int {
     let token = scanner_next();
     switch (token) {
     case Token::Number:
-        yylval = token.payload.Number;
+        yylval = token.Number;
         return NUMBER;
     case Token::Operator:
-        return token.payload.Operator;
+        return token.Operator;
     case Token::Punct:
-        return token.payload.Punct;
+        return token.Punct;
     case Token::Unknown:
         return YYUNDEF;
     case Token::Eof:

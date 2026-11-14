@@ -49,12 +49,12 @@ fn yylex(void) -> int {
     switch (token) {
     case Token::Number:
         /* 返回符号编号，通过 yylval 另传数字的实际值。 */
-        yylval = token.payload.Number;
+        yylval = token.Number;
         return NUMBER;
     case Token::Operator:
-        return token.payload.Operator;
+        return token.Operator;
     case Token::Punct:
-        return token.payload.Punct;
+        return token.Punct;
     case Token::Unknown:
         return YYUNDEF;
     case Token::Eof:

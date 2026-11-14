@@ -396,7 +396,7 @@ Bison 通过`yylex()->int` 这一接口获取Token.对于需要包含语义值�
 
 ```c
     case Token::Number:
-        yylval = token.payload.Number;
+        yylval = token.Number;
         return NUMBER;
 ```
 
@@ -491,11 +491,11 @@ impl Display for Node {
     fn display(const self *node, WriterRef *out) -> int {
         switch (*node) {
         case Node::Number:
-            return write!(out, "{}", node.payload.Number);
+            return write!(out, "{}", node.Number);
         case Node::Binary:
-            return write!(out, "({} {} {})", node.payload.Binary.op,
-                nodes.data[node.payload.Binary.left],
-                nodes.data[node.payload.Binary.right]);
+            return write!(out, "({} {} {})", node.Binary.op,
+                nodes.data[node.Binary.left],
+                nodes.data[node.Binary.right]);
         }
     }
 }

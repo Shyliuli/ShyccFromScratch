@@ -41,21 +41,21 @@ impl Debug for Token{
     fn debug(const self *t, WriterRef *out) -> int {
         switch (*t){
         case Token::Keyword:
-            return write!(out, "Keyword({})", t.payload.Keyword);
+            return write!(out, "Keyword({})", t.Keyword);
         case Token::Symbol:
-            return write!(out, "Symbol({})", t.payload.Symbol);
+            return write!(out, "Symbol({})", t.Symbol);
         case Token::Number:
-            return write!(out, "Number({:?})", t.payload.Number);
+            return write!(out, "Number({:?})", t.Number);
         case Token::String:
-            return write!(out, "String({:?})", t.payload.String);
+            return write!(out, "String({:?})", t.String);
         case Token::Operator:
-            return write!(out, "Operator({})", t.payload.Operator);
+            return write!(out, "Operator({})", t.Operator);
         case Token::Punct:
-            return write!(out, "Punct({:?})", t.payload.Punct);
+            return write!(out, "Punct({:?})", t.Punct);
         case Token::Eof:
             return write!(out, "Eof");
         case Token::Unknown:
-            return write!(out, "Unknown({:?})", t.payload.Unknown);
+            return write!(out, "Unknown({:?})", t.Unknown);
         }
     }
 }
@@ -118,7 +118,7 @@ impl Scanner{
                             scanner.input_file,
                             scanner_line(),
                             scanner_column()-1,
-                            token.payload.Unknown);
+                            token.Unknown);
                         exit(1);
                     }
                     default:
