@@ -45,32 +45,32 @@ impl Debug for Token{
         switch (*t){
         case Token::Keyword:
             out.push_cstr("Keyword(");
-            out.push_str(t.payload.Keyword);
+            out.push_str(t.Keyword);
             out.push_cstr(")");
             break;
         case Token::Symbol:
             out.push_cstr("Symbol(");
-            out.push_str(t.payload.Symbol);
+            out.push_str(t.Symbol);
             out.push_cstr(")");
             break;
         case Token::Number:
             out.push_cstr("Number(");
-            fmt_debug(t.payload.Number, out);
+            fmt_debug(t.Number, out);
             out.push_cstr(")");
             break;
         case Token::String:
             out.push_cstr("String(");
-            fmt_debug(t.payload.String, out);
+            fmt_debug(t.String, out);
             out.push_cstr(")");
             break;
         case Token::Operator:
             out.push_cstr("Operator(");
-            out.push_str(t.payload.Operator);
+            out.push_str(t.Operator);
             out.push_cstr(")");
             break;
         case Token::Punct:
             out.push_cstr("Punct(");
-            fmt_debug(t.payload.Punct, out);
+            fmt_debug(t.Punct, out);
             out.push_cstr(")");
             break;
         case Token::Eof:
