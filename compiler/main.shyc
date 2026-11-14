@@ -40,44 +40,14 @@ fn main(Args args)->int{
 }
 
 impl Debug for Token{
-    fn debug(const self *t, String *out) -> int {
-        int start = out.len();
-        switch (*t){
-        case Token::Keyword:
-            out.push_cstr("Keyword(");
-            out.push_str(t.Keyword);
-            out.push_cstr(")");
-            break;
-        case Token::Symbol:
-            out.push_cstr("Symbol(");
-            out.push_str(t.Symbol);
-            out.push_cstr(")");
-            break;
-        case Token::Number:
-            out.push_cstr("Number(");
-            fmt_debug(t.Number, out);
-            out.push_cstr(")");
-            break;
-        case Token::String:
-            out.push_cstr("String(");
-            fmt_debug(t.String, out);
-            out.push_cstr(")");
-            break;
-        case Token::Operator:
-            out.push_cstr("Operator(");
-            out.push_str(t.Operator);
-            out.push_cstr(")");
-            break;
-        case Token::Punct:
-            out.push_cstr("Punct(");
-            fmt_debug(t.Punct, out);
-            out.push_cstr(")");
-            break;
-        case Token::Eof:
-            out.push_cstr("Eof");
-            break;
-        }
-        return out.len() - start;
+    fn debug(const self *t, WriterRef *out) -> int {
+        if (t.type() == Token::Keyword) return write!(out, "Keyword({})", t.Keyword);
+        if (t.type() == Token::Symbol) return write!(out, "Symbol({})", t.Symbol);
+        if (t.type() == Token::Number) return write!(out, "Number({:?})", t.Number);
+        if (t.type() == Token::String) return write!(out, "String({:?})", t.String);
+        if (t.type() == Token::Operator) return write!(out, "Operator({})", t.Operator);
+        if (t.type() == Token::Punct) return write!(out, "Punct({:?})", t.Punct);
+        return write!(out, "Eof");
     }
 }
 
@@ -96,12 +66,7 @@ impl Scanner{
         while (1) {
             Token token = scanner_next();
             tokens.push(token);
-            switch (token) {
-            case Token::Eof:
-                return tokens;
-            default:
-                break;
-            }
+            if (token.type() == Token::Eof) return tokens;
         }
     }
 }
