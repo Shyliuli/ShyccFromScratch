@@ -6,9 +6,8 @@ use std::fmt::*;
 fn parser_lex(void) -> int;
 fn parser_error(const char *message);
 
-Vec<Token> *input_tokens;
+SourceManager *input;
 int next_token = 0;
-Str input_path;
 
 /* 示例只有固定形状的树，先保存两个会变化的叶子。 */
 struct Function {
@@ -46,16 +45,17 @@ program:
 %%
 
 fn parser_lex(void) -> int {
-    let token = input_tokens->data[next_token++];
+    let location = input->tokens.data[next_token++];
+    let token = location.t;
+    let text = input.token_text(location);
     if (token.type() == Token::Keyword) {
-        let word = token.Keyword;
-        if (word.eq(Str::from_cstr("fn"))) return FN;
-        if (word.eq(Str::from_cstr("int"))) return INT;
-        if (word.eq(Str::from_cstr("return"))) return RETURN;
+        if (text.eq_cstr("fn")) return FN;
+        if (text.eq_cstr("int")) return INT;
+        if (text.eq_cstr("return")) return RETURN;
         return PARSER_UNDEF;
     }
     if (token.type() == Token::Symbol) {
-        parser_lval.text = token.Symbol;
+        parser_lval.text = text;
         return SYMBOL;
     }
     if (token.type() == Token::Number) {
@@ -63,7 +63,7 @@ fn parser_lex(void) -> int {
         return NUMBER;
     }
     if (token.type() == Token::Operator) {
-        if (token.Operator.eq(Str::from_cstr("->"))) return ARROW;
+        if (text.eq_cstr("->")) return ARROW;
         return PARSER_UNDEF;
     }
     if (token.type() == Token::Punct) {
@@ -74,15 +74,17 @@ fn parser_lex(void) -> int {
     }
     return PARSER_UNDEF;
 }
-
 fn parser_error(const char *message) {
-    eprintln("{}: error: syntax error", input_path);
+    let location = input->tokens.data[next_token - 1];
+    eprintln("{}:{}:{}: error: syntax error",
+        input->input_path,
+        input.get_line(location.from),
+        input.get_col(location.from));
 }
 
-pub fn parse_program(Vec<Token> *tokens, Str input_file) -> int {
-    input_tokens = tokens;
+pub fn parse_program(SourceManager *source) -> int {
+    input = source;
     next_token = 0;
-    input_path = input_file;
     let status = parser_parse();
     if (status == 0) println("{}", root);
     return status == 0 ? 0 : 1;

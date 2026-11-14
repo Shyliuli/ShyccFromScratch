@@ -4,8 +4,6 @@
 // #![disable_default_static]
 #include <stdio.h>
 #include <stdlib.h>
-#include <alloc/string.shyh>
-#include <alloc/vec.shyh>
 #include <lexer.shyh>
 //一些shycc libshy暂时不稳定的妥协
 //shycc暂时不支持的函数，但是我们也用不到
@@ -17,23 +15,20 @@
 //让yylex返回Token类型
 #define YY_DECL Token yylex(void)
 
-Vec<String> token_strings = {0};
-
-Str copy_token_text(const char *text)
-{
-    String copy = String::from_cstr(text);
-    token_strings.push(copy);
-    return copy.as_str();
-}
-
 int current_line = 1;
 int current_column = 1;
+usize current_offset = 0;
+usize token_from = 0;
+usize token_to = 0;
 /*对于块注释，我们希望定位块注释开始的地方，因此需要额外维护line和column*/
 int comment_line = 1;
 int comment_column = 1;
 
 #define YY_USER_ACTION                            \
     do {                                          \
+        token_from = current_offset;               \
+        token_to = token_from + (usize)yyleng;     \
+        current_offset = token_to;                 \
         for (int i = 0; i < yyleng; i++) {         \
             if (yytext[i] == '\n') {               \
                 current_line++;                    \
@@ -71,17 +66,17 @@ int scanner_column(void)
 <COMMENT>"*/"                       { BEGIN(INITIAL); comment_end();}
 <COMMENT><<EOF>>                    { return Token::Eof(); }
 <COMMENT>(.|\n)                     { }
-"fn"|"int"|"void"|"return"|"let"|"mut"|"if"|"else"|"while"|"break"|"continue" { return Token::Keyword(copy_token_text(yytext)); }
-[a-zA-Z_][a-zA-Z0-9_]*              { return Token::Symbol(copy_token_text(yytext)); }
+"fn"|"int"|"void"|"return"|"let"|"mut"|"if"|"else"|"while"|"break"|"continue" { return Token::Keyword(); }
+[a-zA-Z_][a-zA-Z0-9_]*              { return Token::Symbol(); }
 [0-9]+                              { return Token::Number(atoi(yytext)); }
-\"(\\.|[^\\"\n])*\"                 { return Token::String(copy_token_text(yytext)); }
-"->"|[-+*/=><]|[><=]=|"++"|"--"     { return Token::Operator(copy_token_text(yytext)); }
+\"(\\.|[^\\"\n])*\"                 { return Token::String(); }
+"->"|[-+*/=><]|[><=]=|"++"|"--"     { return Token::Operator(); }
 [(){},;!]                           { return Token::Punct(yytext[0]); }
 
 "//"[^\n]*                          { }
 [ \t\r\n]+                          { }
 
-.                                   { return Token::Unknown(copy_token_text(yytext)); }
+.                                   { return Token::Unknown(); }
 
 <<EOF>>                             { return Token::Eof(); }
 
@@ -91,6 +86,7 @@ void scanner_start(const char *source)
 {
     current_line = 1;
     current_column = 1;
+    current_offset = 0;
     yy_scan_string(source);
 }
 
@@ -99,11 +95,16 @@ Token scanner_next(void)
     return yylex();
 }
 
+TokenLoc scanner_next_loc(void)
+{
+    Token token = yylex();
+    usize from = token.type() == Token::Eof ? current_offset : token_from;
+    usize to = token.type() == Token::Eof ? current_offset : token_to;
+    TokenLoc location = {token, from, to};
+    return location;
+}
+
 void scanner_stop(void)
 {
     yylex_destroy();
-    for (int i = 0; i < token_strings.len; i++) {
-        token_strings.data[i].drop();
-    }
-    token_strings.drop();
 }

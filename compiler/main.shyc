@@ -27,28 +27,12 @@ fn main(Args args)->int{
     }
     //自动清理String内存
     defer let source = res.unwrap();
-    let p=Scanner::new(source.as_str(), input_file);
-    scanner_start(p.source.data);
-    let mut v=p.scan();
-    // 将 exp1 的 Token 数组交给语法分析器。
-    let status = parse_program(&v, input_file);
-    v.drop();
-    scanner_stop();
+    defer SourceManager sources = scan(source.as_str(), input_file);
+    // 将源文件和 Token 一起交给语法分析器。
+    let status = parse_program(&sources);
     return status;
 }
 
-impl Debug for Token{
-    fn debug(const self *t, WriterRef *out) -> int {
-        if (t.type() == Token::Keyword) return write!(out, "Keyword({})", t.Keyword);
-        if (t.type() == Token::Symbol) return write!(out, "Symbol({})", t.Symbol);
-        if (t.type() == Token::Number) return write!(out, "Number({:?})", t.Number);
-        if (t.type() == Token::String) return write!(out, "String({:?})", t.String);
-        if (t.type() == Token::Operator) return write!(out, "Operator({})", t.Operator);
-        if (t.type() == Token::Punct) return write!(out, "Punct({:?})", t.Punct);
-        if (t.type() == Token::Unknown) return write!(out, "Unknown({:?})", t.Unknown);
-        return write!(out, "Eof");
-    }
-}
 enum ScannerState{
     CommentStart,
     CommentEnd,
@@ -61,65 +45,80 @@ pub fn comment_start(){
 pub fn comment_end(){
     state=CommentEnd;
 }
-struct Scanner{
-    Str source;
-    Str input_file;
-};
-impl Scanner{
-    fn new(Str source, Str input_file)->Scanner{
-        Scanner p;
-        p.source = source;
-        p.input_file = input_file;
-        state=Other;
-        return p;
+
+impl Scanner {
+    fn new(const char *source) -> Scanner {
+        scanner_start(source);
+        Scanner scanner = {1};
+        return scanner;
     }
-    fn scan(self*)->Vec<Token>
-    {
-        let scanner = self;
-        Vec<Token> tokens = {0};
-        while (1) {
-            Token token = scanner_next();
-            switch(state){
-            /*为了处理块注释，需要一个简单地状态机*/
-            case CommentStart:{
-                if (token.type() == Token::Eof) {
-                    /*注释写了一半没有闭合*/
-                    int line = comment_start_line();
-                    int column = comment_start_column();
-                    eprintln("{}:{}:{}: error: unclosed block comment",
-                        scanner.input_file, line, column);
-                    exit(1);
-                }
+
+    fn drop(self *scanner) {
+        if (scanner.active) {
+            scanner_stop();
+            scanner.active = 0;
+        }
+    }
+}
+
+pub fn scan(Str text, Str input_path) -> SourceManager {
+    SourceManager sources;
+    sources.text = text;
+    sources.input_path = input_path;
+    Vec<usize> line_starts = {0};
+    line_starts.push(0);
+    for (usize i = 0; i < text.len; i++) {
+        if (text.data[i] == '\n') line_starts.push(i + 1);
+    }
+    sources.line_starts = line_starts;
+    Vec<TokenLoc> tokens = {0};
+    sources.tokens = tokens;
+    state = Other;
+    defer Scanner scanner = Scanner::new(text.data);
+    while (1) {
+        TokenLoc location = scanner_next_loc();
+        Token token = location.t;
+        switch(state){
+        /*为了处理块注释，需要一个简单地状态机*/
+        case CommentStart:{
+            if (token.type() == Token::Eof) {
+                /*注释写了一半没有闭合*/
+                int line = comment_start_line();
+                int column = comment_start_column();
+                eprintln("{}:{}:{}: error: unclosed block comment",
+                    sources.input_path, line, column);
+                exit(1);
             }
-            case CommentEnd:{
-                /*退出了*/
-                state=Other;
+        }
+        case CommentEnd:{
+            /*退出了*/
+            state=Other;
+        }
+        case Other:{
+            sources.tokens.push(location);
+            if (token.type() == Token::Eof) return sources;
+            if (token.type() == Token::Unknown) {
+                eprintln("{}:{}:{}: error: illegal character '{}'",
+                    sources.input_path,
+                    scanner_line(),
+                    scanner_column()-1,
+                    sources.token_text(location));
+                exit(1);
             }
-            case Other:{
-                tokens.push(token);
-                if (token.type() == Token::Eof) return tokens;
-                if (token.type() == Token::Unknown) {
-                    eprintln("{}:{}:{}: error: illegal character '{}'",
-                        scanner.input_file,
-                        scanner_line(),
-                        scanner_column()-1,
-                        token.Unknown);
-                    exit(1);
-                }
+            break;
+        }
+        default:
+            {
+                eprintln(
+                    "{}:{}:{}: error: Unknown Scanner State:{}",
+                    sources.input_path,
+                    scanner_line(),
+                    scanner_column(),
+                    (int)state
+                );
                 break;
-            }
-            default:
-                {
-                    eprintln(
-                        "{}:{}:{}: error: Unknown Scanner State:{}",
-                        scanner.input_file,
-                        scanner_line(),
-                        scanner_column(),
-                        (int)state
-                    );
-                    break;
-                }
             }
         }
     }
+    return sources;
 }

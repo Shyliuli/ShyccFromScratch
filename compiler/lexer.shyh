@@ -3,28 +3,77 @@
 
 #include <core/str.shyh>
 #include <alloc/vec.shyh>
-
+#include <stdtype.h>
 enum Token {
-    Keyword(Str),
-    Symbol(Str),
+    Keyword,
+    Symbol,
     Number(int),
-    String(Str),
-    Operator(Str),
+    String,
+    Operator,
     Punct(char),
     Eof,
-    Unknown(Str),
+    Unknown,
 };
+
+struct TokenLoc{
+    Token t;
+    usize from;
+    usize to;
+};
+
+struct SourceManager{
+    Str text;
+    Str input_path;
+    Vec<usize> line_starts;
+    Vec<TokenLoc> tokens;
+};
+
+impl SourceManager {
+    fn token_text(const self *manager, TokenLoc token) -> Str {
+        return manager.text.slice(token.from, token.to).unwrap();
+    }
+
+    fn get_line(const self *manager, usize offset) -> usize {
+        usize line = 0;
+        for (usize i = 1; i < manager.line_starts.len; i++) {
+            if (manager.line_starts.data[i] > offset) break;
+            line = i;
+        }
+        return line + 1;
+    }
+
+    fn get_col(const self *manager, usize offset) -> usize {
+        usize line = manager.get_line(offset);
+        return offset - manager.line_starts.data[line - 1] + 1;
+    }
+
+    fn drop(self *manager) {
+        manager.tokens.drop();
+        manager.line_starts.drop();
+    }
+}
 
 fn scanner_start(const char *source);
 fn scanner_next(void) -> Token;
-/* 释放扫描器及 Token 字符串；调用后不能再读取这些 Token 的 Str。 */
+fn scanner_next_loc(void) -> TokenLoc;
+/* 释放扫描器状态；Token 文本仍可由 SourceManager 查询。 */
 fn scanner_stop(void);
 
+struct Scanner {
+    int active;
+};
+
+impl Scanner {
+    fn new(const char *source) -> Scanner;
+    fn drop(self *scanner);
+}
+
+fn scan(Str text, Str input_path) -> SourceManager;
 fn comment_start();
 fn comment_end();
 fn comment_start_line(void) -> int;
 fn comment_start_column(void) -> int;
 fn scanner_line(void) -> int;
 fn scanner_column(void) -> int;
-fn parse_program(Vec<Token> *tokens, Str input_file) -> int;
+fn parse_program(SourceManager *source) -> int;
 #endif
