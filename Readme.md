@@ -192,7 +192,7 @@ Str token_text(const char *text)
 
 .                                   { }
 
-<<EOF>>                             { return Token::Eof; }
+<<EOF>>                             { return Token::Eof(); }
 
 %%
 
