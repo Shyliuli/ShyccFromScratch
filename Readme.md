@@ -411,7 +411,7 @@ Bison 通过`yylex()->int` 这一接口获取Token.对于需要包含语义值�
 | `+`    | `Token::Operator('+')` | `'+'`          | 不使用 |
 | `2`    | `Token::Number(2)`     | `NUMBER`       | `2`  |
 | `)`    | `Token::Punct(')')`    | `')'`          | 不使用 |
-| 输入结束 | `Token::Eof`           | `YYEOF`        | 不使用 |
+| 输入结束 | `Token::Eof()`         | `YYEOF`        | 不使用 |
 
 ### yyparse 如何使用这些符号
 

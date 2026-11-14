@@ -47,30 +47,32 @@ program:
 
 fn parser_lex(void) -> int {
     let token = input_tokens->data[next_token++];
-    switch (token) {
-    case Token::Keyword: {
+    if (token.type() == Token::Keyword) {
         let word = token.Keyword;
         if (word.eq(Str::from_cstr("fn"))) return FN;
         if (word.eq(Str::from_cstr("int"))) return INT;
         if (word.eq(Str::from_cstr("return"))) return RETURN;
         return PARSER_UNDEF;
     }
-    case Token::Symbol:
+    if (token.type() == Token::Symbol) {
         parser_lval.text = token.Symbol;
         return SYMBOL;
-    case Token::Number:
+    }
+    if (token.type() == Token::Number) {
         parser_lval.number = token.Number;
         return NUMBER;
-    case Token::Operator:
+    }
+    if (token.type() == Token::Operator) {
         if (token.Operator.eq(Str::from_cstr("->"))) return ARROW;
         return PARSER_UNDEF;
-    case Token::Punct:
-        return token.Punct;
-    case Token::Eof:
-        return PARSER_EOF;
-    default:
-        return PARSER_UNDEF;
     }
+    if (token.type() == Token::Punct) {
+        return token.Punct;
+    }
+    if (token.type() == Token::Eof) {
+        return PARSER_EOF;
+    }
+    return PARSER_UNDEF;
 }
 
 fn parser_error(const char *message) {

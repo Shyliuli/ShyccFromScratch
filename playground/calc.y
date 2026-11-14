@@ -46,20 +46,24 @@ factor:
 
 fn yylex(void) -> int {
     let token = scanner_next();
-    switch (token) {
-    case Token::Number:
+    if (token.type() == Token::Number) {
         /* 返回符号编号，通过 yylval 另传数字的实际值。 */
         yylval = token.Number;
         return NUMBER;
-    case Token::Operator:
+    }
+    if (token.type() == Token::Operator) {
         return token.Operator;
-    case Token::Punct:
+    }
+    if (token.type() == Token::Punct) {
         return token.Punct;
-    case Token::Unknown:
+    }
+    if (token.type() == Token::Unknown) {
         return YYUNDEF;
-    case Token::Eof:
+    }
+    if (token.type() == Token::Eof) {
         return YYEOF;
     }
+    return YYUNDEF;
 }
 
 fn yyerror(const char *message) {

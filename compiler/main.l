@@ -69,7 +69,7 @@ int scanner_column(void)
 
 \/\*                                {comment_line=current_line; comment_column=current_column-2; BEGIN(COMMENT); comment_start();}
 <COMMENT>"*/"                       { BEGIN(INITIAL); comment_end();}
-<COMMENT><<EOF>>                    { return Token::Eof; }
+<COMMENT><<EOF>>                    { return Token::Eof(); }
 <COMMENT>(.|\n)                     { }
 "fn"|"int"|"void"|"return"|"let"|"mut"|"if"|"else"|"while"|"break"|"continue" { return Token::Keyword(copy_token_text(yytext)); }
 [a-zA-Z_][a-zA-Z0-9_]*              { return Token::Symbol(copy_token_text(yytext)); }
@@ -83,7 +83,7 @@ int scanner_column(void)
 
 .                                   { return Token::Unknown(copy_token_text(yytext)); }
 
-<<EOF>>                             { return Token::Eof; }
+<<EOF>>                             { return Token::Eof(); }
 
 %%
 

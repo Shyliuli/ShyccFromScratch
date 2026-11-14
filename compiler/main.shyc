@@ -39,24 +39,14 @@ fn main(Args args)->int{
 
 impl Debug for Token{
     fn debug(const self *t, WriterRef *out) -> int {
-        switch (*t){
-        case Token::Keyword:
-            return write!(out, "Keyword({})", t.Keyword);
-        case Token::Symbol:
-            return write!(out, "Symbol({})", t.Symbol);
-        case Token::Number:
-            return write!(out, "Number({:?})", t.Number);
-        case Token::String:
-            return write!(out, "String({:?})", t.String);
-        case Token::Operator:
-            return write!(out, "Operator({})", t.Operator);
-        case Token::Punct:
-            return write!(out, "Punct({:?})", t.Punct);
-        case Token::Eof:
-            return write!(out, "Eof");
-        case Token::Unknown:
-            return write!(out, "Unknown({:?})", t.Unknown);
-        }
+        if (t.type() == Token::Keyword) return write!(out, "Keyword({})", t.Keyword);
+        if (t.type() == Token::Symbol) return write!(out, "Symbol({})", t.Symbol);
+        if (t.type() == Token::Number) return write!(out, "Number({:?})", t.Number);
+        if (t.type() == Token::String) return write!(out, "String({:?})", t.String);
+        if (t.type() == Token::Operator) return write!(out, "Operator({})", t.Operator);
+        if (t.type() == Token::Punct) return write!(out, "Punct({:?})", t.Punct);
+        if (t.type() == Token::Unknown) return write!(out, "Unknown({:?})", t.Unknown);
+        return write!(out, "Eof");
     }
 }
 enum ScannerState{
@@ -92,16 +82,13 @@ impl Scanner{
             switch(state){
             /*为了处理块注释，需要一个简单地状态机*/
             case CommentStart:{
-                switch (token) {
-                    case Token::Eof:
-                        /*注释写了一半没有闭合*/
-                        int line = comment_start_line();
-                        int column = comment_start_column();
-                        eprintln("{}:{}:{}: error: unclosed block comment",
-                            scanner.input_file, line, column);
-                        exit(1);
-                    default:
-                        break;
+                if (token.type() == Token::Eof) {
+                    /*注释写了一半没有闭合*/
+                    int line = comment_start_line();
+                    int column = comment_start_column();
+                    eprintln("{}:{}:{}: error: unclosed block comment",
+                        scanner.input_file, line, column);
+                    exit(1);
                 }
             }
             case CommentEnd:{
@@ -110,19 +97,14 @@ impl Scanner{
             }
             case Other:{
                 tokens.push(token);
-                switch (token) {
-                    case Token::Eof:
-                        return tokens;
-                    case Token::Unknown: {
-                        eprintln("{}:{}:{}: error: illegal character '{}'",
-                            scanner.input_file,
-                            scanner_line(),
-                            scanner_column()-1,
-                            token.Unknown);
-                        exit(1);
-                    }
-                    default:
-                        break;
+                if (token.type() == Token::Eof) return tokens;
+                if (token.type() == Token::Unknown) {
+                    eprintln("{}:{}:{}: error: illegal character '{}'",
+                        scanner.input_file,
+                        scanner_line(),
+                        scanner_column()-1,
+                        token.Unknown);
+                    exit(1);
                 }
                 break;
             }

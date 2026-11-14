@@ -17,7 +17,7 @@
 [()]         { return Token::Punct(yytext[0]); }
 [ \t\r\n]+   { }
 .            { return Token::Unknown(yytext[0]); }
-<<EOF>>      { return Token::Eof; }
+<<EOF>>      { return Token::Eof(); }
 
 %%
 
